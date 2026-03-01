@@ -23,7 +23,7 @@ A full-stack Notes application with CRUD functionality, search, filtering, and a
    ```
    This will start:
    - **SQL Server** on port 1433
-   - **Backend API** at [http://localhost:5000](http://localhost:5000) (Swagger at `/swagger`)
+   - **Backend API** at [http://localhost:5001](http://localhost:5001) (Swagger at `/swagger`)
 3. **Run the Frontend locally (as Dockerizing the dev server is optional):**
    ```bash
    cd frontend
