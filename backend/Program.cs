@@ -40,11 +40,12 @@ builder.Services.AddScoped<INoteRepository, NoteRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 
-// Register NpgsqlDataSource (handles both URL and key-value connection strings + SSL)
+// Register NpgsqlDataSource — converts URI format (Render) to key-value format (Npgsql)
 var rawConnString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new Exception("Connection string not found");
 
-var dataSourceBuilder = new NpgsqlDataSourceBuilder(rawConnString);
+var connString = ConvertConnectionString(rawConnString);
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(connString);
 dataSourceBuilder.ConnectionStringBuilder.SslMode = SslMode.Prefer;
 var dataSource = dataSourceBuilder.Build();
 builder.Services.AddSingleton(dataSource);
@@ -121,3 +122,20 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+// Converts postgres:// or postgresql:// URI (injected by Render) to Npgsql key-value format
+static string ConvertConnectionString(string connString)
+{
+    if (connString.StartsWith("postgres://") || connString.StartsWith("postgresql://"))
+    {
+        var uri = new Uri(connString);
+        var userInfo = uri.UserInfo.Split(':');
+        var username = Uri.UnescapeDataString(userInfo[0]);
+        var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
+        var host = uri.Host;
+        var port = uri.Port > 0 ? uri.Port : 5432;
+        var database = uri.AbsolutePath.TrimStart('/');
+        return $"Host={host};Port={port};Database={database};Username={username};Password={password};Ssl Mode=Require;Trust Server Certificate=true";
+    }
+    return connString;
+}
