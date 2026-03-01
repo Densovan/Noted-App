@@ -12,25 +12,23 @@ public interface IUserRepository
 
 public class UserRepository : IUserRepository
 {
-    private readonly string _connectionString;
+    private readonly NpgsqlDataSource _dataSource;
 
-    public UserRepository(IConfiguration configuration)
+    public UserRepository(NpgsqlDataSource dataSource)
     {
-        _connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new ArgumentNullException("Connection string not found");
+        _dataSource = dataSource;
     }
-
-    private NpgsqlConnection CreateConnection() => new(_connectionString);
 
     public async Task<User?> GetByUsernameAsync(string username)
     {
-        using var connection = CreateConnection();
+        await using var connection = await _dataSource.OpenConnectionAsync();
         const string sql = @"SELECT * FROM ""Users"" WHERE ""Username"" = @Username";
         return await connection.QueryFirstOrDefaultAsync<User>(sql, new { Username = username });
     }
 
     public async Task<int> CreateAsync(User user)
     {
-        using var connection = CreateConnection();
+        await using var connection = await _dataSource.OpenConnectionAsync();
         const string sql = @"
             INSERT INTO ""Users"" (""Username"", ""PasswordHash"")
             VALUES (@Username, @PasswordHash)

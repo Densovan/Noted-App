@@ -40,6 +40,15 @@ builder.Services.AddScoped<INoteRepository, NoteRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 
+// Register NpgsqlDataSource (handles both URL and key-value connection strings + SSL)
+var rawConnString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new Exception("Connection string not found");
+
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(rawConnString);
+dataSourceBuilder.ConnectionStringBuilder.SslMode = SslMode.Prefer;
+var dataSource = dataSourceBuilder.Build();
+builder.Services.AddSingleton(dataSource);
+
 // Auth
 var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new Exception("JWT Key not found");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -70,7 +79,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Swagger always enabled (needed on Render too)
 app.UseSwagger();
 app.UseSwaggerUI();
 
@@ -84,27 +93,20 @@ app.MapControllers();
 // Initialize Database (PostgreSQL)
 using (var scope = app.Services.CreateScope())
 {
-    var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
-    var connString = config.GetConnectionString("DefaultConnection");
+    var ds = scope.ServiceProvider.GetRequiredService<NpgsqlDataSource>();
     var sqlPath = Path.Combine(app.Environment.ContentRootPath, "Data", "init.sql");
 
-    // Check fallback path (for published builds)
     if (!File.Exists(sqlPath))
-    {
         sqlPath = Path.Combine(AppContext.BaseDirectory, "Data", "init.sql");
-    }
 
     if (File.Exists(sqlPath))
     {
         Console.WriteLine($"Found init.sql at {sqlPath}. Starting initialization...");
         try
         {
-            await using var conn = new NpgsqlConnection(connString);
-            await conn.OpenAsync();
-
+            await using var conn = await ds.OpenConnectionAsync();
             var sql = await File.ReadAllTextAsync(sqlPath);
             await conn.ExecuteAsync(sql);
-
             Console.WriteLine("Database tables initialized successfully.");
         }
         catch (Exception ex)
@@ -114,7 +116,7 @@ using (var scope = app.Services.CreateScope())
     }
     else
     {
-        Console.WriteLine($"Warning: init.sql not found at {sqlPath}. Skipping database initialization.");
+        Console.WriteLine($"Warning: init.sql not found at {sqlPath}. Skipping.");
     }
 }
 
