@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/sovanden/.gemini/antigravity/scratch/notes-app/backend/NotesApp.Api.csproj": {}
+    "/Users/sovanden/Desktop/notes-app/backend/NotesApp.Api.csproj": {}
   },
   "projects": {
-    "/Users/sovanden/.gemini/antigravity/scratch/notes-app/backend/NotesApp.Api.csproj": {
+    "/Users/sovanden/Desktop/notes-app/backend/NotesApp.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/sovanden/.gemini/antigravity/scratch/notes-app/backend/NotesApp.Api.csproj",
+        "projectUniqueName": "/Users/sovanden/Desktop/notes-app/backend/NotesApp.Api.csproj",
         "projectName": "NotesApp.Api",
-        "projectPath": "/Users/sovanden/.gemini/antigravity/scratch/notes-app/backend/NotesApp.Api.csproj",
+        "projectPath": "/Users/sovanden/Desktop/notes-app/backend/NotesApp.Api.csproj",
         "packagesPath": "/Users/sovanden/.nuget/packages/",
-        "outputPath": "/Users/sovanden/.gemini/antigravity/scratch/notes-app/backend/obj/",
+        "outputPath": "/Users/sovanden/Desktop/notes-app/backend/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/sovanden/.nuget/NuGet/NuGet.Config"
@@ -52,9 +52,9 @@
               "target": "Package",
               "version": "[8.0.0, )"
             },
-            "Microsoft.Data.SqlClient": {
+            "Npgsql": {
               "target": "Package",
-              "version": "[5.2.2, )"
+              "version": "[8.0.5, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",

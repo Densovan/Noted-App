@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: notes-app-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://+:8080
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: notes-app-db
+          property: connectionString
+      - key: Jwt__Key
+        sync: false # Set this manually in Render dashboard (secret)
+      - key: Jwt__Issuer
+        value: NotesApp
+      - key: Jwt__Audience
+        value: NotesApp
+
+databases:
+  - name: notes-app-db
+    plan: free
+    databaseName: NotesDb
+    user: notesapp

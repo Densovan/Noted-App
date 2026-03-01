@@ -1,5 +1,5 @@
 using Dapper;
-using Microsoft.Data.SqlClient;
+using Npgsql;
 using NotesApp.Api.Models;
 
 namespace NotesApp.Api.Repositories;
@@ -22,19 +22,19 @@ public class NoteRepository : INoteRepository
         _connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new ArgumentNullException("Connection string not found");
     }
 
-    private SqlConnection CreateConnection() => new(_connectionString);
+    private NpgsqlConnection CreateConnection() => new(_connectionString);
 
     public async Task<IEnumerable<Note>> GetAllAsync(int userId)
     {
         using var connection = CreateConnection();
-        const string sql = "SELECT * FROM Notes WHERE UserId = @UserId ORDER BY CreatedAt DESC";
+        const string sql = @"SELECT * FROM ""Notes"" WHERE ""UserId"" = @UserId ORDER BY ""CreatedAt"" DESC";
         return await connection.QueryAsync<Note>(sql, new { UserId = userId });
     }
 
     public async Task<Note?> GetByIdAsync(int id, int userId)
     {
         using var connection = CreateConnection();
-        const string sql = "SELECT * FROM Notes WHERE Id = @Id AND UserId = @UserId";
+        const string sql = @"SELECT * FROM ""Notes"" WHERE ""Id"" = @Id AND ""UserId"" = @UserId";
         return await connection.QueryFirstOrDefaultAsync<Note>(sql, new { Id = id, UserId = userId });
     }
 
@@ -42,9 +42,9 @@ public class NoteRepository : INoteRepository
     {
         using var connection = CreateConnection();
         const string sql = @"
-            INSERT INTO Notes (Title, Content, CreatedAt, UpdatedAt, UserId)
-            VALUES (@Title, @Content, @CreatedAt, @UpdatedAt, @UserId);
-            SELECT CAST(SCOPE_IDENTITY() as int);";
+            INSERT INTO ""Notes"" (""Title"", ""Content"", ""CreatedAt"", ""UpdatedAt"", ""UserId"")
+            VALUES (@Title, @Content, @CreatedAt, @UpdatedAt, @UserId)
+            RETURNING ""Id"";";
         return await connection.ExecuteScalarAsync<int>(sql, note);
     }
 
@@ -52,9 +52,9 @@ public class NoteRepository : INoteRepository
     {
         using var connection = CreateConnection();
         const string sql = @"
-            UPDATE Notes 
-            SET Title = @Title, Content = @Content, UpdatedAt = @UpdatedAt 
-            WHERE Id = @Id AND UserId = @UserId";
+            UPDATE ""Notes""
+            SET ""Title"" = @Title, ""Content"" = @Content, ""UpdatedAt"" = @UpdatedAt
+            WHERE ""Id"" = @Id AND ""UserId"" = @UserId";
         var rowsAffected = await connection.ExecuteAsync(sql, note);
         return rowsAffected > 0;
     }
@@ -62,7 +62,7 @@ public class NoteRepository : INoteRepository
     public async Task<bool> DeleteAsync(int id, int userId)
     {
         using var connection = CreateConnection();
-        const string sql = "DELETE FROM Notes WHERE Id = @Id AND UserId = @UserId";
+        const string sql = @"DELETE FROM ""Notes"" WHERE ""Id"" = @Id AND ""UserId"" = @UserId";
         var rowsAffected = await connection.ExecuteAsync(sql, new { Id = id, UserId = userId });
         return rowsAffected > 0;
     }

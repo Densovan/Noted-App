@@ -1,5 +1,5 @@
 using Dapper;
-using Microsoft.Data.SqlClient;
+using Npgsql;
 using NotesApp.Api.Models;
 
 namespace NotesApp.Api.Repositories;
@@ -19,12 +19,12 @@ public class UserRepository : IUserRepository
         _connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new ArgumentNullException("Connection string not found");
     }
 
-    private SqlConnection CreateConnection() => new(_connectionString);
+    private NpgsqlConnection CreateConnection() => new(_connectionString);
 
     public async Task<User?> GetByUsernameAsync(string username)
     {
         using var connection = CreateConnection();
-        const string sql = "SELECT * FROM Users WHERE Username = @Username";
+        const string sql = @"SELECT * FROM ""Users"" WHERE ""Username"" = @Username";
         return await connection.QueryFirstOrDefaultAsync<User>(sql, new { Username = username });
     }
 
@@ -32,9 +32,9 @@ public class UserRepository : IUserRepository
     {
         using var connection = CreateConnection();
         const string sql = @"
-            INSERT INTO Users (Username, PasswordHash)
-            VALUES (@Username, @PasswordHash);
-            SELECT CAST(SCOPE_IDENTITY() as int);";
+            INSERT INTO ""Users"" (""Username"", ""PasswordHash"")
+            VALUES (@Username, @PasswordHash)
+            RETURNING ""Id"";";
         return await connection.ExecuteScalarAsync<int>(sql, user);
     }
 }
