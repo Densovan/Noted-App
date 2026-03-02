@@ -47,4 +47,4 @@ A full-stack Notes application with CRUD functionality, search, filtering, and a
   - `ConnectionStrings__DefaultConnection`: SQL Server connection string.
   - `Jwt__Key`: JWT signing key.
 - **Frontend:**
-  - `VITE_API_URL`: URL of the backend API (default: `http://localhost:5000/api`).
+  - `VITE_API_URL`: URL of the backend API (default: `http://localhost:5001/api`).
